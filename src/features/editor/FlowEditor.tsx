@@ -1,213 +1,132 @@
-import { useCallback, useState } from "react";
-import ReactFlow, {
-  Background,
-  Controls,
-  MiniMap,
-  addEdge,
-  useEdgesState,
-  useNodesState,
-  Connection,
-  Edge,
-  Node,
-  ReactFlowProvider,
-  NodeTypes,
-} from "reactflow";
-import "reactflow/dist/style.css";
-import NodeList from "../nodes/NodeList";
-import EditableNode from "../nodes/EditableNode";
+import { useCallback, useState } from 'react';
+import ReactFlow, { Background, Controls, MiniMap, addEdge, applyEdgeChanges, applyNodeChanges, Connection, Edge, Node, OnEdgesChange, OnNodesChange } from 'reactflow';
+import 'reactflow/dist/style.css';
+import NodeList from '../nodes/NodeList';
+import { nodeTypes } from '../nodes/CustomNodes';
+import Modal from '../../components/Modal'; // 👈 Asegúrate que tengas Modal.tsx
 
-const initialNodes: Node[] = [];
-const initialEdges: Edge[] = [];
+export default function FlowEditor() {
+  const [nodes, setNodes] = useState<Node[]>([]);
+  const [edges, setEdges] = useState<Edge[]>([]);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showJSON, setShowJSON] = useState(false);
 
-const nodeTypes: NodeTypes = {
-  editableNode: EditableNode,
-};
-
-function FlowCanvas() {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-
-  const [jsonModalOpen, setJsonModalOpen] = useState(false);
-  const [exportedJson, setExportedJson] = useState<string | null>(null);
-  const [errorModalOpen, setErrorModalOpen] = useState(false);
-  const [showToast, setShowToast] = useState(false);
-
-  const onConnect = useCallback(
-    (params: Connection | Edge) => setEdges((eds) => addEdge(params, eds)),
+  const onNodesChange: OnNodesChange = useCallback(
+    (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
     []
   );
 
-  const onChange = (id: string, newData: any) => {
+  const onEdgesChange: OnEdgesChange = useCallback(
+    (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
+    []
+  );
+
+  const onConnect = useCallback((connection: Connection) => {
+    const newEdge: Edge = {
+      ...connection,
+      style: { stroke: '#2c3e50', strokeWidth: 2 }, // 🔥 Color azul oscuro y más grueso
+    };
+    setEdges((eds) => addEdge(newEdge, eds));
+  }, []);
+
+  const handleNodeChange = (id: string, field: string, value: any) => {
     setNodes((nds) =>
-      nds.map((node) => {
-        if (node.id === id) {
-          node.data = { ...newData, onChange };
-        }
-        return node;
-      })
+      nds.map((node) =>
+        node.id === id ? { ...node, data: { ...node.data, [field]: value } } : node
+      )
     );
   };
 
-  const addNode = (nodeType: string) => {
-    const id = `${+new Date()}`;
-    const position = { x: Math.random() * 400, y: Math.random() * 400 };
+  const handleDeleteNode = (id: string) => {
+    setNodes((nds) => nds.filter((node) => node.id !== id));
+    setEdges((eds) => eds.filter((edge) => edge.source !== id && edge.target !== id));
+  };
 
-    if (nodeType === "start" && nodes.some((n) => n.data.label.toLowerCase() === "start")) {
-      alert("Ya existe un nodo Start.");
+  const addNode = (type: string) => {
+    const hasStart = nodes.some((node) => node.type === 'Start');
+    if (type === 'Start' && hasStart) {
+      setErrorMessage('⚠️ Solo se permite un nodo Start.');
+      setTimeout(() => setErrorMessage(''), 3000);
       return;
     }
 
-    setNodes((nds) =>
-      nds.concat({
-        id,
-        type: "editableNode",
-        position,
-        data: { label: nodeType.charAt(0).toUpperCase() + nodeType.slice(1), onChange },
-      })
-    );
+    let initialData: any = { label: type, onChange: handleNodeChange, onDelete: handleDeleteNode };
+
+    if (type === 'Email') {
+      initialData = { label: type, title: '', content: '', onChange: handleNodeChange, onDelete: handleDeleteNode };
+    } else if (type === 'Wait') {
+      initialData = { label: type, duration: '', onChange: handleNodeChange, onDelete: handleDeleteNode };
+    } else if (type === 'Condition') {
+      initialData = { label: type, condition: '', onChange: handleNodeChange, onDelete: handleDeleteNode };
+    }
+
+    const newNode: Node = {
+      id: `${nodes.length + 1}`,
+      type,
+      position: { x: Math.random() * 400, y: Math.random() * 400 },
+      data: initialData,
+    };
+
+    setNodes((nds) => nds.concat(newNode));
+    setErrorMessage('');
   };
 
   const exportFlow = () => {
-    if (nodes.length === 0) {
-      setErrorModalOpen(true);
-      return;
-    }
-
-    const startNode = nodes.find((n) => n.data.label.toLowerCase() === "start");
-
-    const flow = {
-      start: startNode ? startNode.id : null,
-      nodes: nodes.map((node) => {
-        const outgoing = edges.find((edge) => edge.source === node.id);
-        return {
-          id: node.id,
-          type: node.data.label,
-          data: {
-            label: node.data.label,
-            content: node.data.content,
-            duration: node.data.duration,
-            condition: node.data.condition,
-          },
-          next: outgoing?.target || null,
-        };
-      }),
-    };
-
-    console.info(flow);
-    const json = JSON.stringify(flow, null, 2);
-    setExportedJson(json);
-    setJsonModalOpen(true);
+    setShowJSON(true);
   };
 
-  const copyJsonToClipboard = () => {
-    if (exportedJson) {
-      navigator.clipboard.writeText(exportedJson);
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
-    }
+  const clearFlow = () => {
+    setNodes([]);
+    setEdges([]);
+    setShowJSON(false);
+    setErrorMessage('');
   };
 
   return (
-    <div className="flex flex-col w-full h-screen">
-      {/* Botón Exportar */}
-      <div className="p-2 bg-gray-100">
+    <div className="flex h-screen w-screen">
+      {/* Sidebar */}
+      <aside className="w-60 bg-gray-200 p-4 flex flex-col gap-4">
+        <h2 className="text-lg font-bold">Agregar nodo</h2>
+        {errorMessage && <p className="text-red-500">{errorMessage}</p>}
+        <NodeList addNode={addNode} />
+
         <button
           onClick={exportFlow}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          className="p-2 mt-4 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
-          Exportar Flow
+          Exportar JSON
         </button>
+
+        <button
+          onClick={clearFlow}
+          className="p-2 mt-2 bg-red-500 text-white rounded hover:bg-red-600"
+        >
+          Eliminar Todo
+        </button>
+      </aside>
+
+      {/* Canvas con fondo GRIS CLARO */}
+      <div className="flex-1 h-full w-full bg-gray-200">
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          nodeTypes={nodeTypes}
+          fitView
+          style={{ width: '100%', height: '100%' }}
+        >
+          <Background gap={16} size={1} />
+          <MiniMap />
+          <Controls />
+        </ReactFlow>
       </div>
 
-      {/* Área principal */}
-      <div className="flex flex-1 overflow-hidden">
-        <NodeList onAddNode={addNode} />
-
-        <div className="flex-1 h-full bg-white">
-          <ReactFlowProvider>
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              fitView
-              nodeTypes={nodeTypes}
-              onInit={(instance) => {
-                // 👈 Aquí centramos los nodos automáticamente
-                setTimeout(() => {
-                  instance.fitView({ padding: 0.4 });
-                }, 100);
-              }}
-            >
-              <Background />
-              <MiniMap />
-              <Controls />
-            </ReactFlow>
-          </ReactFlowProvider>
-        </div>
-      </div>
-
-      {/* Modal Export JSON */}
-      {jsonModalOpen && exportedJson && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg w-11/12 max-w-2xl shadow-lg">
-            <h2 className="text-xl font-bold mb-4">Flujo Exportado</h2>
-            <pre className="bg-gray-100 p-4 rounded overflow-x-auto text-sm max-h-96">
-              {exportedJson}
-            </pre>
-            <div className="flex justify-end gap-2 mt-4">
-              <button
-                onClick={copyJsonToClipboard}
-                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-              >
-                Copiar JSON
-              </button>
-              <button
-                onClick={() => setJsonModalOpen(false)}
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Error */}
-      {errorModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg w-80 shadow-lg">
-            <h2 className="text-lg font-bold mb-4 text-red-600">Error</h2>
-            <p className="text-gray-700 mb-6">
-              Por favor, agrega al menos un nodo antes de exportar el flujo.
-            </p>
-            <div className="flex justify-end">
-              <button
-                onClick={() => setErrorModalOpen(false)}
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Toast éxito */}
-      {showToast && (
-        <div className="fixed bottom-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow-lg animate-bounce z-50">
-          ¡JSON copiado al portapapeles!
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default function FlowEditor() {
-  return (
-    <div className="flex w-full h-screen">
-      <FlowCanvas />
+      {/* Modal para mostrar JSON exportado */}
+      <Modal isOpen={showJSON} onClose={() => setShowJSON(false)} title="Exportar Flow como JSON">
+        <pre className="text-xs whitespace-pre-wrap">{JSON.stringify({ nodes, edges }, null, 2)}</pre>
+      </Modal>
     </div>
   );
 }

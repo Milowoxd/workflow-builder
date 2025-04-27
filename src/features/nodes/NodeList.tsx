@@ -1,30 +1,23 @@
-type NodeType = {
-  type: string;
-  label: string;
-};
-
-export default function NodeList({ onAddNode }: { onAddNode: (type: string) => void }) {
-  const nodeTypes: NodeType[] = [
-    { type: "start", label: "Start" },
-    { type: "email", label: "Email" },
-    { type: "wait", label: "Wait" },
-    { type: "condition", label: "Condition" },
-  ];
-
-  return (
-    <aside className="w-48 bg-gray-100 p-4">
-      <h3 className="text-lg font-bold mb-4">Node Types</h3>
+// src/features/nodes/NodeList.tsx
+interface NodeListProps {
+    addNode: (type: string) => void;
+  }
+  
+  export default function NodeList({ addNode }: NodeListProps) {
+    const nodeTypes = ['Start', 'Email', 'Wait', 'Condition'];
+  
+    return (
       <div className="flex flex-col gap-2">
-        {nodeTypes.map((node) => (
+        {nodeTypes.map((type) => (
           <button
-            key={node.type}
-            onClick={() => onAddNode(node.type)}
-            className="p-2 bg-white rounded shadow cursor-pointer hover:bg-gray-200 text-center"
+            key={type}
+            onClick={() => addNode(type)}
+            className="bg-gray-300 p-2 rounded hover:bg-gray-400"
           >
-            {node.label}
+            {type}
           </button>
         ))}
       </div>
-    </aside>
-  );
-}
+    );
+  }
+  

@@ -1,9 +1,14 @@
-import FlowEditor from "./features/editor/FlowEditor";
+// src/App.tsx
+import React from 'react';
+import './App.css';
+import FlowEditor from './features/editor/FlowEditor';
 
-function App() {
+const App: React.FC = () => {
   return (
-    <FlowEditor />
+    <div className="App">
+      <FlowEditor />
+    </div>
   );
-}
+};
 
 export default App;
