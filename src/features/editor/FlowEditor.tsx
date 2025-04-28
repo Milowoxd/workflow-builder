@@ -3,7 +3,7 @@ import ReactFlow, { Background, Controls, MiniMap, addEdge, applyEdgeChanges, ap
 import 'reactflow/dist/style.css';
 import NodeList from '../nodes/NodeList';
 import { nodeTypes } from '../nodes/CustomNodes';
-import Modal from '../../components/Modal'; // 👈 Asegúrate que tengas Modal.tsx
+import Modal from '../../components/Modal'; // 👈  Modal.tsx
 
 export default function FlowEditor() {
   const [nodes, setNodes] = useState<Node[]>([]);
