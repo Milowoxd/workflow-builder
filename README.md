@@ -7,7 +7,7 @@ Construir un editor visual tipo "Workflow Automation" donde el usuario pueda:
 - Conectarlos entre sí para definir una secuencia de acciones.
 - Editar el contenido de cada nodo de manera inline.
 - Ver los datos exportados en formato JSON reflejando el flujo actual.
-- Cambiar entre modo Claro y Oscuro dinámicamente.
+
 
 ---
 
