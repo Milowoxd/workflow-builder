@@ -46,9 +46,26 @@ Vista general del editor de flujos:
 
 ---
 
+
+
 ## 🚀 Instalación y ejecución local
 
-1. Clona este repositorio:
+Sigue estos pasos para correr el proyecto en tu máquina:
+
+1. **Clona el repositorio**
 
 ```bash
-git clone https://github.com/Milowoxd/workflow-builder
+git clone https://github.com/Milowoxd/workflow-builder.git
+cd workflow-builder
+npm install
+npm run dev
+Accede a: http://localhost:5173
+
+---
+
+# 👨‍💻 Extra (opcional)
+Si quieres también podemos agregar una sección tipo:
+
+- **Tecnologías usadas** (React, Vite, TailwindCSS, ReactFlow)
+- **Funciones destacadas** (Validaciones, edición inline, etc.)
+- **Autor** Andres Camilo Manrique🚀✨
