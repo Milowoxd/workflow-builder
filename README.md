@@ -63,9 +63,4 @@ Accede a: http://localhost:5173
 
 ---
 
-# 👨‍💻 Extra (opcional)
-Si quieres también podemos agregar una sección tipo:
 
-- **Tecnologías usadas** (React, Vite, TailwindCSS, ReactFlow)
-- **Funciones destacadas** (Validaciones, edición inline, etc.)
-- **Autor** Andres Camilo Manrique🚀✨
