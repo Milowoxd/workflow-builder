@@ -30,7 +30,6 @@ Construir un editor visual tipo "Workflow Automation" donde el usuario pueda:
 - **Exportar el flujo** actual como JSON en un modal emergente.
 - **Eliminar nodos** individualmente (ícono ❌ sobre el nodo).
 - **Eliminar todo el flujo** desde la barra lateral.
-- **Modo claro y modo oscuro** con un botón de cambio de tema.
 - **Validaciones** de estructura y lógica de nodos.
 
 ---
