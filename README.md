@@ -39,7 +39,7 @@ Construir un editor visual tipo "Workflow Automation" donde el usuario pueda:
 
 Vista general del editor de flujos:
 
-![App Screenshot](./screenshot.png)
+![App Screenshot](./Captura de pantalla de 2025-04-27 18-44-38.png)
 
 
 
